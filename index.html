@@ -1,121 +1,230 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Echoes by Reiniscouple</title>
-  <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      overflow: hidden;
-      background: black;
-    }
-    canvas {
-      display: block;
-    }
-    #startButton {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      padding: 16px 32px;
-      font-size: 18px;
-      background: white;
-      color: black;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      z-index: 10;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Echoes by Reiniscouple</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+            background-color: white;
+            color: black;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+        }
+        h1 {
+            margin-bottom: 10px;
+        }
+        .artwork {
+            width: 100%;
+            height: auto;
+            border: 1px solid black;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: black;
+        }
+        .description-container {
+            margin-top: 20px;
+            padding: 20px;
+            border: 1px solid black;
+            text-align: justify;
+            max-width: 750px;
+            margin-left: auto;
+            margin-right: auto;
+            line-height: 1.6;
+        }
+        .buttons-container {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+            padding: 10px;
+        }
+        .button {
+            padding: 12px 24px;
+            font-size: 18px;
+            border: none;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: 0.3s;
+            width: 120px;
+        }
+        .buy-button {
+            background-color: #28A745; /* Verde */
+            color: white;
+        }
+        .buy-button:hover {
+            background-color: #218838;
+        }
+        .sell-button {
+            background-color: #DC3545; /* Vermelho */
+            color: white;
+        }
+        .sell-button:hover {
+            background-color: #B22234;
+        }
+        .chart {
+            width: 100%;
+            height: 620px;
+            border: 1px solid black;
+            margin-top: 20px;
+            background-color: white;
+        }
+        .contract-text {
+            margin-top: 10px;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .footer {
+            margin-top: 30px;
+            padding: 10px;
+            background-color: white;
+            color: black;
+            font-size: 12px;
+        }
+    </style>
 </head>
 <body>
 
-  <button id="startButton">Click to Start</button>
+    <div class="container">
+        <h1>Echoes</h1>
+        <p>by Reiniscouple</p>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/addons/p5.sound.min.js"></script>
+        <!-- Área da Arte -->
+        <!-- Área da Arte -->
+<div class="artwork" id="artwork">
+    <button id="startButton" style="
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        padding: 16px 32px;
+        font-size: 18px;
+        background: white;
+        color: black;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        z-index: 10;">Click to Start</button>
 
-  <script>
-    let mic, fft;
-    let waves = [];
-    let started = false;
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/addons/p5.sound.min.js"></script>
+    <script>
+        let mic, fft;
+        let waves = [];
+        let started = false;
 
-    function setup() {
-      createCanvas(windowWidth, windowHeight);
-      background(0);
-      noFill();
-      stroke(255);
-      
-      // Só inicializa o áudio depois do clique
-      if (!started) {
-        noLoop(); // pausa o desenho até que o usuário clique
-      }
+        function setup() {
+            let canvas = createCanvas(windowWidth * 0.95, windowHeight * 0.6);
+            canvas.parent('artwork');
+            background(0);
+            noFill();
+            stroke(255);
 
-      // Preparar ondas
-      let freqCategories = [];
-      for (let i = 0; i < 7; i++) freqCategories.push("bass");
-      for (let i = 0; i < 7; i++) freqCategories.push("mid");
-      for (let i = 0; i < 6; i++) freqCategories.push("treble");
-      freqCategories = shuffle(freqCategories);
+            if (!started) {
+                noLoop();
+            }
 
-      for (let i = 0; i < 20; i++) {
-        waves.push({
-          freqCategory: freqCategories[i],
-          phase: random(TWO_PI),
-          speed: random(0.02, 0.05),
-          cycles: random(1, 4)
-        });
-      }
+            let freqCategories = [];
+            for (let i = 0; i < 7; i++) freqCategories.push("bass");
+            for (let i = 0; i < 7; i++) freqCategories.push("mid");
+            for (let i = 0; i < 6; i++) freqCategories.push("treble");
+            freqCategories = shuffle(freqCategories);
 
-      // Botão de início
-      document.getElementById('startButton').addEventListener('click', () => {
-        userStartAudio().then(() => {
-          mic = new p5.AudioIn();
-          mic.start(() => {
-            fft = new p5.FFT(0.8, 1024);
-            fft.setInput(mic);
-            started = true;
-            document.getElementById('startButton').style.display = 'none';
-            loop(); // começa o desenho
-          });
-        });
-      });
-    }
+            for (let i = 0; i < 20; i++) {
+                waves.push({
+                    freqCategory: freqCategories[i],
+                    phase: random(TWO_PI),
+                    speed: random(0.02, 0.05),
+                    cycles: random(1, 4)
+                });
+            }
 
-    function draw() {
-      if (!started) return;
-      background(0);
-      fft.analyze();
-      let spacing = height / (waves.length + 1);
-
-      stroke(255);
-      noFill();
-
-      for (let i = 0; i < waves.length; i++) {
-        let wave = waves[i];
-        let energy = fft.getEnergy(wave.freqCategory);
-        let thickness = map(energy, 0, 255, 1, 5);
-        strokeWeight(thickness);
-        let amplitude = map(energy, 0, 255, 0, spacing * 0.8);
-        let freq = TWO_PI * wave.cycles / width;
-        let baseY = (i + 1) * spacing;
-
-        beginShape();
-        for (let x = 0; x <= width; x += 5) {
-          let y = baseY + sin(x * freq + wave.phase) * amplitude;
-          vertex(x, y);
+            document.getElementById('startButton').addEventListener('click', () => {
+                userStartAudio().then(() => {
+                    mic = new p5.AudioIn();
+                    mic.start(() => {
+                        fft = new p5.FFT(0.8, 1024);
+                        fft.setInput(mic);
+                        started = true;
+                        document.getElementById('startButton').style.display = 'none';
+                        loop();
+                    });
+                });
+            });
         }
-        endShape();
 
-        wave.phase += wave.speed;
-      }
-    }
+        function draw() {
+            if (!started) return;
+            background(0);
+            fft.analyze();
+            let spacing = height / (waves.length + 1);
 
-    function windowResized() {
-      resizeCanvas(windowWidth, windowHeight);
-    }
-  </script>
+            stroke(255);
+            noFill();
+
+            for (let i = 0; i < waves.length; i++) {
+                let wave = waves[i];
+                let energy = fft.getEnergy(wave.freqCategory);
+                let thickness = map(energy, 0, 255, 1, 5);
+                strokeWeight(thickness);
+                let amplitude = map(energy, 0, 255, 0, spacing * 0.8);
+                let freq = TWO_PI * wave.cycles / width;
+                let baseY = (i + 1) * spacing;
+
+                beginShape();
+                for (let x = 0; x <= width; x += 5) {
+                    let y = baseY + sin(x * freq + wave.phase) * amplitude;
+                    vertex(x, y);
+                }
+                endShape();
+
+                wave.phase += wave.speed;
+            }
+        }
+
+        function windowResized() {
+            resizeCanvas(windowWidth * 0.95, windowHeight * 0.6);
+        }
+    </script>
+</div>
+        <!-- Área de Descrição -->
+        <div class="description-container">
+            <h3>Echoes</h3>
+            <h4>Artistic Vision</h4>
+            <p>Echoes is a generative audiovisual artwork that exists in a state of constant transformation—no moment is ever repeated, no frame ever identical. Drawing inspiration from themes of impermanence, environmental resonance, and the invisible footprints we leave in the world, the piece reacts to the ambient soundscape in real time. Even in apparent silence, Echoes reveals the truth: the world is never still, and silence is an illusion.</p>
+            <p>This constant flux makes Echoes a meditation on presence and absence: the viewer's own breath, footsteps, distant traffic, or a bird outside the window become encoded into the motion of light across the screen. There is no observer without influence. The artwork listens, transforms, and re-expresses the world back to us—not as it is, but as it is felt, sonically.</p>
+            <p>In a digital age saturated with control and repetition, Echoes embraces uncertainty, listening, and change—reminding us that every moment is an echo of what was, and a precursor to what might be.</p>
+            <h4>Technical Foundation</h4>
+            <p>Technically, the work is crafted entirely with code using p5.js and p5.sound, encapsulated within a single self-contained web page. Twenty white sinewave-like threads stretch across a black canvas, resembling a multi-channel oscilloscope. Each line responds to a distinct frequency band from the captured environmental audio. The amplitude and thickness of each wave fluctuate according to the energy present in that frequency—low frequencies, midtones, and highs are distributed in an unpredictable yet balanced fashion, creating a spatial randomness that resists fixed interpretation.</p>
+        </div>
+
+        <!-- Botões BUY e SELL -->
+        <div class="buttons-container">
+            <button class="button buy-button" onclick="window.open('https://www.clanker.world/clanker/0x02306dD4de39D565320FFa0A33ad52CCa29ac428', '_blank')">BUY</button>
+            <button class="button sell-button" onclick="window.open('https://www.clanker.world/clanker/0x02306dD4de39D565320FFa0A33ad52CCa29ac428', '_blank')">SELL</button>
+        </div>
+
+        <!-- Área do Gráfico -->
+        <div class="chart">
+            <iframe height="100%" width="100%" id="geckoterminal-embed" title="GeckoTerminal Embed" src="https://www.geckoterminal.com/base/pools/0x12C8819ad8e0E0a2e32Be0063Db6f9F60FF951EB?embed=1&info=0&swaps=0&grayscale=0&light_chart=0&chart_type=price&resolution=15m" frameborder="0" allow="clipboard-write" allowfullscreen>
+            </iframe>
+        </div>
+
+        <!-- Texto do Contract -->
+        <p class="contract-text"> Contract: <a href="https://basescan.org/token/0x02306dD4de39D565320FFa0A33ad52CCa29ac428" target="_blank">0x62066719193718D80f076b2d7f486DeFf6656746</a></p>
+
+        <!-- Footer -->
+        <div class="footer">
+            Powered by Base | Reiniscouple 2025
+        </div>
+    </div>
+
 </body>
 </html>
