@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Echoes by Reiniscouple</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: black;
+    }
+    canvas {
+      display: block;
+    }
+    #startButton {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      padding: 16px 32px;
+      font-size: 18px;
+      background: white;
+      color: black;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      z-index: 10;
+    }
+  </style>
+</head>
+<body>
+
+  <button id="startButton">Click to Start</button>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/addons/p5.sound.min.js"></script>
+
+  <script>
+    let mic, fft;
+    let waves = [];
+    let started = false;
+
+    function setup() {
+      createCanvas(windowWidth, windowHeight);
+      background(0);
+      noFill();
+      stroke(255);
+      
+      // Só inicializa o áudio depois do clique
+      if (!started) {
+        noLoop(); // pausa o desenho até que o usuário clique
+      }
+
+      // Preparar ondas
+      let freqCategories = [];
+      for (let i = 0; i < 7; i++) freqCategories.push("bass");
+      for (let i = 0; i < 7; i++) freqCategories.push("mid");
+      for (let i = 0; i < 6; i++) freqCategories.push("treble");
+      freqCategories = shuffle(freqCategories);
+
+      for (let i = 0; i < 20; i++) {
+        waves.push({
+          freqCategory: freqCategories[i],
+          phase: random(TWO_PI),
+          speed: random(0.02, 0.05),
+          cycles: random(1, 4)
+        });
+      }
+
+      // Botão de início
+      document.getElementById('startButton').addEventListener('click', () => {
+        userStartAudio().then(() => {
+          mic = new p5.AudioIn();
+          mic.start(() => {
+            fft = new p5.FFT(0.8, 1024);
+            fft.setInput(mic);
+            started = true;
+            document.getElementById('startButton').style.display = 'none';
+            loop(); // começa o desenho
+          });
+        });
+      });
+    }
+
+    function draw() {
+      if (!started) return;
+      background(0);
+      fft.analyze();
+      let spacing = height / (waves.length + 1);
+
+      stroke(255);
+      noFill();
+
+      for (let i = 0; i < waves.length; i++) {
+        let wave = waves[i];
+        let energy = fft.getEnergy(wave.freqCategory);
+        let thickness = map(energy, 0, 255, 1, 5);
+        strokeWeight(thickness);
+        let amplitude = map(energy, 0, 255, 0, spacing * 0.8);
+        let freq = TWO_PI * wave.cycles / width;
+        let baseY = (i + 1) * spacing;
+
+        beginShape();
+        for (let x = 0; x <= width; x += 5) {
+          let y = baseY + sin(x * freq + wave.phase) * amplitude;
+          vertex(x, y);
+        }
+        endShape();
+
+        wave.phase += wave.speed;
+      }
+    }
+
+    function windowResized() {
+      resizeCanvas(windowWidth, windowHeight);
+    }
+  </script>
+</body>
+</html>
